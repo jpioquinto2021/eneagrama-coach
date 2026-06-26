@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Descubre tu Eneagrama · José Pioquinto Coach</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',system-ui,sans-serif}
+  input,select,textarea,button{font-family:inherit}
+  ::-webkit-scrollbar{width:6px}
+  ::-webkit-scrollbar-track{background:#0C2035}
+  ::-webkit-scrollbar-thumb{background:#06B6D4;border-radius:3px}
+  @keyframes bar{0%,100%{width:20%}50%{width:90%}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState } = React;
+
+// ═══════════════════════════════════════════════════════════
+// ⚙️  CONFIGURA ESTAS DOS LÍNEAS ANTES DE PUBLICAR
+// ═══════════════════════════════════════════════════════════
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby3xHyCvlwW4WGWhcSz_Z3aZLo9KSxEei8G7omPG7yW-PF-AHKrIlZiCmLI38Ggvu7w/exec
+
+;
+const API_URL         = "/.netlify/functions/claude";
+// ═══════════════════════════════════════════════════════════
+
+const AQ="#06B6D4",PK="#EC4899",BG="#061829",BG2="#0C2035";
+const BS=9, APASS="pioquinto2025";
+const LABELS=["Nada que ver","Poco parecido","Algo parecido","Bastante parecido","Muy parecido a mí"];
+
+const TI={
+  1:{name:"Perfeccionista",emoji:"⚖️",color:"#0EA5E9",center:"Instintivo"},
+  2:{name:"Ayudador",emoji:"❤️",color:"#EC4899",center:"Emocional"},
+  3:{name:"Triunfador",emoji:"🏆",color:"#F472B6",center:"Emocional"},
+  4:{name:"Individualista",emoji:"🎨",color:"#A855F7",center:"Emocional"},
+  5:{name:"Investigador",emoji:"🔭",color:"#6366F1",center:"Mental"},
+  6:{name:"Leal",emoji:"🛡️",color:"#14B8A6",center:"Mental"},
+  7:{name:"Entusiasta",emoji:"✨",color:"#06B6D4",center:"Mental"},
+  8:{name:"Desafiador",emoji:"🦁",color:"#F97316",center:"Instintivo"},
+  9:{name:"Pacificador",emoji:"🕊️",color:"#0D9488",center:"Instintivo"},
+};
+const CTR={
+  Emocional:{types:[2,3,4],emoji:"💜",color:PK,desc:"T2, T3, T4"},
+  Instintivo:{types:[1,8,9],emoji:"🔥",color:"#F97316",desc:"T1, T8, T9"},
+  Mental:{types:[5,6,7],emoji:"🧠",color:AQ,desc:"T5, T6, T7"},
+};
+const STI={
+  SP:{name:"Autoconservación",emoji:"🏠",color:AQ,desc:"Tu energía se orienta hacia la seguridad personal, el confort y los recursos vitales. Eres práctico/a, previsor/a y cuidas profundamente tu bienestar físico y material."},
+  SO:{name:"Social",emoji:"👥",color:PK,desc:"Tu energía fluye hacia los grupos y la comunidad. Eres consciente de las dinámicas colectivas y buscas pertenecer y contribuir activamente."},
+  SX:{name:"Íntimo",emoji:"⚡",color:"#A855F7",desc:"Tu energía se concentra en la intensidad de las conexiones uno a uno. Buscas fusión, pasión y experiencias que te transformen profundamente."},
+};
+const VIRTUES={1:"Serenidad",2:"Humildad",3:"Autenticidad",4:"Ecuanimidad",5:"Desapego",6:"Valentía",7:"Sobriedad",8:"Inocencia",9:"Acción"};
+const PASSIONS={1:"Ira",2:"Orgullo",3:"Engaño",4:"Envidia",5:"Avaricia",6:"Miedo",7:"Gula",8:"Lujuria",9:"Pereza"};
+
+const Q=[
+  {id:1,type:1,text:"Tengo altos estándares y me cuesta aceptar el trabajo cuando no está perfecto."},
+  {id:2,type:1,text:"Me incomoda cuando las personas no siguen las reglas o hacen las cosas incorrectamente."},
+  {id:3,type:1,text:"Con frecuencia noto los errores en mi entorno que otros parecen ignorar."},
+  {id:4,type:1,text:"Tengo una voz interna crítica que me recuerda cuándo podría haberlo hecho mejor."},
+  {id:5,type:1,text:"Para mí es fundamental actuar éticamente y hacer lo correcto, incluso si es difícil."},
+  {id:6,type:2,text:"Me siento bien cuando las personas me necesitan y puedo ayudarles."},
+  {id:7,type:2,text:"Me cuesta pedir ayuda porque prefiero ser yo quien cuide a los demás."},
+  {id:8,type:2,text:"Con frecuencia anticipo las necesidades de otros antes de que las expresen."},
+  {id:9,type:2,text:"Mi bienestar emocional depende mucho de cómo están las personas cercanas a mí."},
+  {id:10,type:2,text:"A veces me resiento cuando doy mucho y no recibo reconocimiento a cambio."},
+  {id:11,type:3,text:"Me importa mucho la imagen que proyecto y cómo me perciben los demás."},
+  {id:12,type:3,text:"Trabajo duro para alcanzar metas y me motiva profundamente el éxito visible."},
+  {id:13,type:3,text:"Me adapto fácilmente a lo que la situación o el grupo espera de mí."},
+  {id:14,type:3,text:"Me cuesta detenerme y descansar porque siento que siempre hay algo más por lograr."},
+  {id:15,type:3,text:"El fracaso es algo que me resulta muy difícil de aceptar o admitir."},
+  {id:16,type:4,text:"Siento que hay algo especial o diferente en mí que pocas personas comprenden realmente."},
+  {id:17,type:4,text:"La autenticidad emocional profunda es algo absolutamente fundamental para mí."},
+  {id:18,type:4,text:"A veces me enfoco demasiado en lo que me falta o en cómo podrían haber sido las cosas."},
+  {id:19,type:4,text:"Me atraen las experiencias intensas, el arte, la música o la expresión creativa."},
+  {id:20,type:4,text:"A veces siento que no encajo del todo en mi entorno o que pertenezco a otro lugar."},
+  {id:21,type:5,text:"Necesito tiempo a solas para recargar energía después de haber estado con personas."},
+  {id:22,type:5,text:"Prefiero observar y analizar cuidadosamente antes de actuar o hablar."},
+  {id:23,type:5,text:"Me siento más cómodo con el conocimiento y el análisis que con las interacciones sociales intensas."},
+  {id:24,type:5,text:"Cuido mucho mis recursos (tiempo, energía, dinero) y me incomoda sentir que los malgasto."},
+  {id:25,type:5,text:"Prefiero dominar un tema en profundidad antes de compartirlo o aplicarlo."},
+  {id:26,type:6,text:"Necesito sentirme seguro y respaldado para poder actuar con plena confianza."},
+  {id:27,type:6,text:"Cuestiono las intenciones de las personas hasta que demuestran ser verdaderamente confiables."},
+  {id:28,type:6,text:"Anticipo los problemas que podrían surgir y me preparo para ellos con anticipación."},
+  {id:29,type:6,text:"La lealtad es uno de mis valores más importantes en las relaciones y en el trabajo."},
+  {id:30,type:6,text:"A veces dudo de mis propias decisiones y busco validación externa antes de actuar."},
+  {id:31,type:7,text:"Me aburro fácilmente con la rutina y busco constantemente nuevas experiencias y estímulos."},
+  {id:32,type:7,text:"Soy muy bueno para encontrar el lado positivo de las situaciones difíciles o dolorosas."},
+  {id:33,type:7,text:"Tengo muchos proyectos e ideas en mente y me cuesta enfocarme en uno solo."},
+  {id:34,type:7,text:"Evito el dolor emocional manteniéndome ocupado, activo o en constante movimiento."},
+  {id:35,type:7,text:"Me encanta la libertad y me incomoda profundamente sentirme limitado o atrapado."},
+  {id:36,type:8,text:"Me incomoda profundamente sentirme controlado o manipulado por otras personas."},
+  {id:37,type:8,text:"Cuando tengo razón, defiendo mi posición con fuerza aunque eso genere conflicto."},
+  {id:38,type:8,text:"Prefiero la confrontación directa a la diplomacia cuando hay un problema real."},
+  {id:39,type:8,text:"Protejo de forma natural e instintiva a las personas vulnerables de mi entorno."},
+  {id:40,type:8,text:"Me gusta tener control sobre mi vida, mis decisiones y los proyectos en los que participo."},
+  {id:41,type:9,text:"Evito el conflicto y busco mediar naturalmente cuando hay tensión entre personas."},
+  {id:42,type:9,text:"A veces pospongo mis propias necesidades y deseos para mantener la armonía del grupo."},
+  {id:43,type:9,text:"Me cuesta tomar decisiones cuando hay varias opciones disponibles."},
+  {id:44,type:9,text:"Me adapto con facilidad al ambiente y las personas que me rodean en cada momento."},
+  {id:45,type:9,text:"Siento que la paz interior y exterior es lo más importante para mi bienestar."},
+];
+const SQ=[
+  {id:"sp1",sub:"SP",text:"Me preocupa constantemente tener suficientes recursos (dinero, salud, hogar) para sentirme seguro/a."},
+  {id:"sp2",sub:"SP",text:"El confort físico y la estabilidad material son mis prioridades más importantes en la vida."},
+  {id:"sp3",sub:"SP",text:"Tiendo a ser muy cuidadoso/a con el dinero y los recursos que tengo disponibles."},
+  {id:"sp4",sub:"SP",text:"Prefiero la rutina y la previsibilidad antes que los cambios repentinos en mi cotidianidad."},
+  {id:"so1",sub:"SO",text:"Me importa mucho pertenecer a grupos y ser reconocido/a dentro de ellos."},
+  {id:"so2",sub:"SO",text:"Estoy muy atento/a a las dinámicas sociales, los roles y jerarquías dentro de los grupos."},
+  {id:"so3",sub:"SO",text:"La aceptación y el reconocimiento de mi comunidad son fundamentales para mí."},
+  {id:"so4",sub:"SO",text:"Disfruto participar activamente en grupos, organizaciones o causas colectivas."},
+  {id:"sx1",sub:"SX",text:"Busco conexiones intensas y profundas con personas especiales en mi vida."},
+  {id:"sx2",sub:"SX",text:"Me atraen las experiencias apasionantes o transformadoras que me generan mucha intensidad interior."},
+  {id:"sx3",sub:"SX",text:"Tiendo a enfocarme más en relaciones uno a uno que en grupos o en mi estabilidad individual."},
+  {id:"sx4",sub:"SX",text:"Busco constantemente algo que me encienda por dentro: una persona, proyecto o causa."},
+];
+const FIELDS=[
+  {id:"fullName",label:"Nombre completo",type:"text",req:true,ph:"Nombres y apellidos completos"},
+  {id:"docId",label:"Cédula de ciudadanía",type:"text",req:true,ph:"Ej: 12345678"},
+  {id:"age",label:"Edad",type:"number",req:true,ph:"Ej: 35"},
+  {id:"email",label:"Correo electrónico",type:"email",req:true,ph:"tu@correo.com"},
+  {id:"mobile",label:"Celular / WhatsApp",type:"tel",req:true,ph:"Ej: 3001234567"},
+  {id:"city",label:"Ciudad de residencia",type:"text",req:true,ph:"Ej: Bogotá, Medellín..."},
+  {id:"education",label:"Nivel educativo",type:"select",req:true,opts:["Bachillerato","Técnico / Tecnólogo","Profesional","Especialización","Maestría o Doctorado"]},
+  {id:"maritalStatus",label:"Estado civil",type:"select",req:true,opts:["Soltero/a","Casado/a","Unión libre","Divorciado/a","Viudo/a"]},
+  {id:"hasChildren",label:"¿Tienes hijos?",type:"select",req:false,opts:["Sí","No"]},
+  {id:"occupation",label:"Ocupación / Cargo actual",type:"text",req:false,ph:"Ej: Gerente Comercial"},
+  {id:"sector",label:"Sector / Industria",type:"select",req:false,opts:["Seguros y finanzas","Educación","Salud","Tecnología","Comercio","Industria","Gobierno / Público","Otro"]},
+  {id:"experience",label:"Años de experiencia laboral",type:"select",req:false,opts:["Menos de 2 años","2 a 5 años","5 a 10 años","10 a 20 años","Más de 20 años"]},
+  {id:"prevCoaching",label:"¿Has recibido coaching antes?",type:"select",req:false,opts:["Sí, proceso completo","Sí, algunas sesiones","No, es mi primera vez"]},
+  {id:"howKnow",label:"¿Cómo conociste a José Pioquinto?",type:"select",req:false,opts:["LinkedIn","Referido de un colega","Conferencia o evento","Redes sociales","Seguros del Estado","Google / Internet","Otro"]},
+];
+
+function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
+
+function renderText(text){
+  return text.split('\n').map((line,i)=>{
+    if(!line.trim())return React.createElement('div',{key:i,style:{height:5}});
+    const parts=line.split(/\*\*(.*?)\*\*/g);
+    const isH=line.trim().startsWith('**'),isBullet=line.trim().startsWith('•');
+    return React.createElement('p',{key:i,style:{margin:isBullet?"0.2rem 0 0.2rem 0.5rem":isH?"0.9rem 0 0.25rem":"0.3rem 0"}},
+      parts.map((p,j)=>j%2===1?React.createElement('strong',{key:j,style:{color:isH?"#0f172a":"#1e293b",fontSize:isH?"15px":"inherit"}},p):p)
+    );
+  });
+}
+
+// ── GRÁFICAS SVG PERSONALIZADAS ────────────────────────────
+function RadarSVG({sc}){
+  const order=[9,1,2,3,4,5,6,7,8],n=9,S=270,cx=135,cy=135,R=95,maxV=25;
+  const ang=i=>(i*2*Math.PI/n)-Math.PI/2;
+  const px=(i,v)=>cx+(v/maxV)*R*Math.cos(ang(i));
+  const py=(i,v)=>cy+(v/maxV)*R*Math.sin(ang(i));
+  const gp=v=>order.map((_,i)=>`${i===0?'M':'L'}${px(i,v)},${py(i,v)}`).join(' ')+'Z';
+  const dp=order.map((_,i)=>`${i===0?'M':'L'}${px(i,sc[order[i]]||0)},${py(i,sc[order[i]]||0)}`).join(' ')+'Z';
+  return (
+    <svg viewBox={`0 0 ${S} ${S}`} style={{width:'100%',maxWidth:S,display:'block',margin:'0 auto'}}>
+      {[5,10,15,20,25].map(v=><path key={v} d={gp(v)} fill="none" stroke="rgba(6,182,212,0.18)" strokeWidth={1}/>)}
+      {order.map((_,i)=><line key={i} x1={cx} y1={cy} x2={px(i,25)} y2={py(i,25)} stroke="rgba(6,182,212,0.12)" strokeWidth={1}/>)}
+      <path d={dp} fill="rgba(6,182,212,0.22)" stroke="#06B6D4" strokeWidth={2}/>
+      {order.map((t,i)=><circle key={i} cx={px(i,sc[t]||0)} cy={py(i,sc[t]||0)} r={3} fill="#06B6D4"/>)}
+      {order.map((t,i)=>{
+        const lx=cx+(R+20)*Math.cos(ang(i)),ly=cy+(R+20)*Math.sin(ang(i));
+        return <text key={i} x={lx} y={ly} textAnchor="middle" dominantBaseline="middle" fill="#94a3b8" fontSize={10} fontWeight="600" fontFamily="Segoe UI,sans-serif">{TI[t].emoji}T{t}</text>;
+      })}
+    </svg>
+  );
+}
+
+function DonutSVG({data,dominant}){
+  const S=160,cx=80,cy=80,ro=68,ri=46;
+  const total=data.reduce((s,d)=>s+d.value,0)||1;
+  let a=-Math.PI/2;
+  const cos=Math.cos,sin=Math.sin;
+  return (
+    <svg viewBox={`0 0 ${S} ${S}`} style={{width:'100%',maxWidth:S,display:'block',margin:'0 auto'}}>
+      {data.map((d,i)=>{
+        const start=a,span=(d.value/total)*2*Math.PI;
+        a+=span;const end=a,large=span>Math.PI?1:0;
+        const path=[`M${cx+ro*cos(start)},${cy+ro*sin(start)}`,`A${ro},${ro},0,${large},1,${cx+ro*cos(end)},${cy+ro*sin(end)}`,`L${cx+ri*cos(end)},${cy+ri*sin(end)}`,`A${ri},${ri},0,${large},0,${cx+ri*cos(start)},${cy+ri*sin(start)}`,'Z'].join(' ');
+        return <path key={i} d={path} fill={d.color} opacity={d.key===dominant?1:0.4}/>;
+      })}
+    </svg>
+  );
+}
+
+function ScaleButtons({qid,val,onChange,color}){
+  return (
+    <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:5}}>
+      {[1,2,3,4,5].map(v=>(
+        <button key={v} onClick={()=>onChange(qid,v)} style={{padding:'8px 3px',borderRadius:9,border:'2px solid',borderColor:val===v?color:'#e2e8f0',background:val===v?color:'white',color:val===v?'white':'#64748b',fontWeight:val===v?800:400,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',gap:2}}>
+          <span style={{fontSize:16,fontWeight:700}}>{v}</span>
+          <span style={{fontSize:8,lineHeight:1.1,textAlign:'center'}}>{LABELS[v-1]}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ── APP PRINCIPAL ──────────────────────────────────────────
+function App(){
+  const [screen,setScreen]=useState("welcome");
+  const [intake,setIntake]=useState({});
+  const [intention,setIntention]=useState("");
+  const [qs]=useState(()=>shuffle(Q));
+  const [ans,setAns]=useState({});
+  const [stAns,setStAns]=useState({});
+  const [bi,setBi]=useState(0);
+  const [result,setResult]=useState(null);
+  const [analysis,setAnalysis]=useState("");
+  const [lmsg,setLmsg]=useState("Procesando...");
+  const [consent,setConsent]=useState(false);
+  const [adminPass,setAdminPass]=useState("");
+  const [adminErr,setAdminErr]=useState("");
+  const [adminRecs,setAdminRecs]=useState([]);
+  const [showAdmin,setShowAdmin]=useState(false);
+
+  const tb=Math.ceil(qs.length/BS),cb=qs.slice(bi*BS,(bi+1)*BS);
+  const ta=Object.keys(ans).length,prog=Math.round((ta/45)*100);
+  const aca=cb.every(q=>ans[q.id]!==undefined);
+  const stDone=SQ.every(q=>stAns[q.id]!==undefined);
+  const fname=intake.fullName?.split(" ")[0]||"";
+  const intakeOk=FIELDS.filter(f=>f.req).every(f=>intake[f.id]?.toString().trim().length>0);
+
+  function setField(k,v){setIntake(p=>({...p,[k]:v}));}
+  function setAnsQ(id,v){setAns(p=>({...p,[id]:v}));}
+  function setAnsST(id,v){setStAns(p=>({...p,[id]:v}));}
+
+  async function loadAdmin(){
+    if(adminPass!==APASS){setAdminErr("Contraseña incorrecta");return;}
+    try{
+      const res=await fetch(APPS_SCRIPT_URL+"?action=list");
+      const data=await res.json();
+      setAdminRecs(data.records||[]);
+      setShowAdmin(true);
+    }catch(e){setAdminErr("Error al cargar: "+e.message);}
+  }
+
+  function nextBatch(){if(bi<tb-1){setBi(b=>b+1);window.scrollTo(0,0);}else setScreen("subtype");}
+
+  async function finish(){
+    setScreen("loading");
+    const s={};for(let t=1;t<=9;t++)s[t]=0;
+    qs.forEach(q=>{if(ans[q.id])s[q.type]+=ans[q.id];});
+    const sorted=Object.entries(s).sort((a,b)=>b[1]-a[1]);
+    const primary=parseInt(sorted[0][0]);
+    const adj=[primary===1?9:primary-1,primary===9?1:primary+1];
+    const wing=s[adj[0]]>s[adj[1]]?adj[0]:adj[1];
+    const spSc=["sp1","sp2","sp3","sp4"].reduce((x,id)=>x+(stAns[id]||0),0);
+    const soSc=["so1","so2","so3","so4"].reduce((x,id)=>x+(stAns[id]||0),0);
+    const sxSc=["sx1","sx2","sx3","sx4"].reduce((x,id)=>x+(stAns[id]||0),0);
+    const stScores={SP:spSc,SO:soSc,SX:sxSc};
+    const dominant=Object.entries(stScores).sort((a,b)=>b[1]-a[1])[0][0];
+    setResult({primaryType:primary,wingType:wing,scores:s,stScores,dominant});
+    const sum=Object.entries(s).sort((a,b)=>b[1]-a[1]).map(([t,v])=>`Tipo ${t} - ${TI[t].name}: ${v}/25`).join("\n");
+    const msgs=["Analizando tu perfil...","Identificando tus patrones profundos...","Determinando tu subtipo instintivo...","Construyendo tu plan de crecimiento...","Casi listo, "+fname+"..."];
+    let mi=0;const iv=setInterval(()=>{if(mi<msgs.length)setLmsg(msgs[mi++]);},2200);
+    let atext="";
+    try{
+      const res=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,messages:[{role:"user",content:
+          "Eres experto coach en Eneagrama. Análisis en español cálido y profundo.\n"+
+          "Nombre: "+intake.fullName+" | Edad: "+intake.age+" | Ciudad: "+intake.city+"\n"+
+          "Educación: "+intake.education+" | Estado civil: "+intake.maritalStatus+"\n"+
+          "Ocupación: "+(intake.occupation||"N/E")+" | Sector: "+(intake.sector||"N/E")+"\n"+
+          "Intención: \""+(intention||"Autoconocimiento")+"\"\n"+
+          "Puntajes:\n"+sum+"\n"+
+          "Tipo "+primary+" - "+TI[primary].name+" | Ala "+wing+" | Centro "+TI[primary].center+" | Subtipo "+STI[dominant].name+"\n\n"+
+          "Genera con secciones EXACTAS (usa **texto** para negrillas):\n"+
+          "**Tu Esencia como Tipo "+primary+"**\n[3-4 oraciones. Menciona subtipo "+STI[dominant].name+"]\n"+
+          "**Tus 4 Fortalezas Únicas**\n• **[Fortaleza]**: [Descripción]\n• **[Fortaleza]**: [Descripción]\n• **[Fortaleza]**: [Descripción]\n• **[Fortaleza]**: [Descripción]\n"+
+          "**3 Puntos Ciegos a Transformar**\n• **[Patrón]**: [Cómo se manifiesta]\n• **[Patrón]**: [Cómo se manifiesta]\n• **[Patrón]**: [Cómo se manifiesta]\n"+
+          "**Tu Plan de Crecimiento (4 Prácticas)**\n• **[Práctica]**: [Accionable]\n• **[Práctica]**: [Accionable]\n• **[Práctica]**: [Accionable]\n• **[Práctica]**: [Accionable]\n"+
+          "**Mensaje Personal para "+fname+"**\n[Párrafo cálido usando \"tú\", menciona ala "+wing+"]"
+        }]})});
+      const d=await res.json();
+      atext=d.content?.map(c=>c.text||"").join("")||"No se pudo generar el análisis.";
+    }catch(e){atext="**Error**\nOcurrió un problema. Recarga e intenta de nuevo.";}
+    setAnalysis(atext);
+    try{
+      const rec={id:Date.now().toString(),timestamp:new Date().toISOString(),personal:intake,intention,primaryType:primary,wingType:wing,stScores,dominant};
+      fetch(APPS_SCRIPT_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify(rec)});
+    }catch(e){}
+    clearInterval(iv);setScreen("result");
+  }
+
+  // ── ADMIN ─────────────────────────────────────────────────
+  if(showAdmin){
+    const tc={};for(let t=1;t<=9;t++)tc[t]=0;
+    adminRecs.forEach(r=>{if(r.primaryType)tc[r.primaryType]++;});
+    const td=Object.entries(tc).map(([t,c])=>({t:parseInt(t),c,...TI[t]})).filter(d=>d.c>0).sort((a,b)=>b.c-a.c);
+    const maxT=Math.max(...td.map(d=>d.c),1);
+    const cityMap={};adminRecs.forEach(r=>{const v=r.personal?.city||"N/E";cityMap[v]=(cityMap[v]||0)+1;});
+    const cities=Object.entries(cityMap).sort((a,b)=>b[1]-a[1]).slice(0,7);
+    const eduMap={};adminRecs.forEach(r=>{const v=r.personal?.education||"N/E";eduMap[v]=(eduMap[v]||0)+1;});
+    const marMap={};adminRecs.forEach(r=>{const v=r.personal?.maritalStatus||"N/E";marMap[v]=(marMap[v]||0)+1;});
+    const subMap={};adminRecs.forEach(r=>{if(r.dominant){const n=STI[r.dominant]?.name||r.dominant;subMap[n]=(subMap[n]||0)+1;}});
+    const ages=adminRecs.map(r=>parseInt(r.personal?.age||0)).filter(a=>a>0);
+    const avgAge=ages.length?Math.round(ages.reduce((a,b)=>a+b,0)/ages.length):0;
+    const bdr="1px solid rgba(6,182,212,0.12)";
+    const card={background:BG2,borderRadius:14,padding:"1.25rem",border:bdr};
+    function exportCSV(){
+      const h=["Nombre","Cédula","Edad","Email","Ciudad","Educación","E.Civil","Tipo","Centro","Ala","Subtipo","Fecha"];
+      const rows=adminRecs.map(r=>[r.personal?.fullName,r.personal?.docId,r.personal?.age,r.personal?.email,r.personal?.city,r.personal?.education,r.personal?.maritalStatus,r.primaryType?`T${r.primaryType} ${TI[r.primaryType]?.name}`:"",r.primaryType?TI[r.primaryType]?.center:"",r.wingType?`T${r.wingType}`:"",r.dominant?STI[r.dominant]?.name:"",r.timestamp].map(v=>`"${v||""}"`));
+      const csv=[h.join(","),...rows.map(r=>r.join(","))].join("\n");
+      const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));a.download="eneagrama.csv";a.click();
+    }
+    return (
+      <div style={{minHeight:"100vh",background:BG,fontFamily:"'Segoe UI',sans-serif"}}>
+        <div style={{background:`linear-gradient(135deg,${BG},${BG2})`,padding:"1.25rem 1.5rem",borderBottom:bdr,position:"sticky",top:0,zIndex:10}}>
+          <div style={{maxWidth:960,margin:"0 auto",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div>
+              <p style={{color:AQ,fontSize:10,letterSpacing:3,textTransform:"uppercase",margin:"0 0 0.15rem",fontWeight:600}}>Panel Admin · Privado</p>
+              <h2 style={{color:"white",margin:0,fontSize:18}}>🧭 Eneagrama · José Pioquinto</h2>
+            </div>
+            <div style={{display:"flex",gap:"0.6rem"}}>
+              <button onClick={exportCSV} style={{padding:"9px 14px",borderRadius:8,background:`linear-gradient(135deg,${AQ},#0EA5E9)`,color:"white",fontWeight:700,fontSize:12,border:"none",cursor:"pointer"}}>📥 CSV</button>
+              <button onClick={()=>setShowAdmin(false)} style={{padding:"9px 14px",borderRadius:8,background:"rgba(255,255,255,0.07)",color:"#94a3b8",fontWeight:600,fontSize:12,border:bdr,cursor:"pointer"}}>✕ Cerrar</button>
+            </div>
+          </div>
+        </div>
+        <div style={{maxWidth:960,margin:"0 auto",padding:"1.5rem"}}>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:"1rem",marginBottom:"1.25rem"}}>
+            {[{icon:"👥",val:adminRecs.length,label:"Coachees"},{icon:"🎯",val:td[0]?`${td[0].emoji} ${td[0].name}`:"—",label:"Tipo más común"},{icon:"📍",val:cities[0]?cities[0][0]:"—",label:"Ciudad top"},{icon:"🎂",val:avgAge||"—",label:"Edad prom."}].map((k,i)=>(
+              <div key={i} style={{...card,textAlign:"center"}}>
+                <div style={{fontSize:24,marginBottom:3}}>{k.icon}</div>
+                <div style={{color:"white",fontWeight:800,fontSize:typeof k.val==="string"&&k.val.length>10?12:20,marginBottom:2}}>{k.val}</div>
+                <div style={{color:"#64748b",fontSize:10,textTransform:"uppercase"}}>{k.label}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1.2fr 0.8fr",gap:"1rem",marginBottom:"1.25rem"}}>
+            <div style={card}>
+              <h4 style={{color:"white",margin:"0 0 1rem",fontSize:13,fontWeight:700}}>🧩 Por Eneatipo</h4>
+              {td.length===0?<p style={{color:"#475569",fontSize:12}}>Sin datos</p>:td.map(d=>(
+                <div key={d.t} style={{marginBottom:9}}>
+                  <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
+                    <span style={{color:"#cbd5e1",fontSize:12}}>{d.emoji} T{d.t} · {d.name}</span>
+                    <span style={{color:d.color,fontSize:12,fontWeight:700}}>{d.c}</span>
+                  </div>
+                  <div style={{background:"rgba(0,0,0,0.3)",borderRadius:4,height:7}}>
+                    <div style={{height:"100%",background:d.color,borderRadius:4,width:`${(d.c/maxT)*100}%`}}/>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{display:"flex",flexDirection:"column",gap:"1rem"}}>
+              {[{title:"🎭 Subtipos",data:Object.entries(subMap)},{title:"📍 Ciudades",data:cities.slice(0,4)},{title:"💍 Estado civil",data:Object.entries(marMap).slice(0,4)}].map(({title,data})=>(
+                <div key={title} style={card}>
+                  <h4 style={{color:"white",margin:"0 0 0.5rem",fontSize:12,fontWeight:700}}>{title}</h4>
+                  {data.map(([k,v])=>(
+                    <div key={k} style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+                      <span style={{color:"#94a3b8",fontSize:10}}>{k}</span>
+                      <span style={{color:AQ,fontWeight:700,fontSize:12}}>{v}</span>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"1rem",marginBottom:"1.25rem"}}>
+            {[{title:"🎓 Educación",data:Object.entries(eduMap)},{title:"🏢 Sector",data:Object.entries(adminRecs.reduce((acc,r)=>{const v=r.personal?.sector;if(v)acc[v]=(acc[v]||0)+1;return acc;},{}))}].map(({title,data})=>(
+              <div key={title} style={card}>
+                <h4 style={{color:"white",margin:"0 0 0.75rem",fontSize:12,fontWeight:700}}>{title}</h4>
+                {data.map(([k,v])=>(
+                  <div key={k} style={{display:"flex",justifyContent:"space-between",marginBottom:5}}>
+                    <span style={{color:"#94a3b8",fontSize:11}}>{k}</span>
+                    <span style={{color:"white",fontWeight:700,fontSize:12}}>{v}</span>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+          <div style={card}>
+            <h4 style={{color:"white",margin:"0 0 1rem",fontSize:13,fontWeight:700}}>📋 Registros ({adminRecs.length})</h4>
+            {adminRecs.length===0?<p style={{color:"#475569",fontSize:12}}>Sin registros aún.</p>:(
+              <div style={{overflowX:"auto"}}>
+                <table style={{width:"100%",borderCollapse:"collapse"}}>
+                  <thead>
+                    <tr style={{borderBottom:"1px solid rgba(255,255,255,0.08)"}}>
+                      {["Nombre","Edad","Ciudad","Tipo","Centro","Ala","Subtipo","Fecha"].map(h=>(
+                        <th key={h} style={{color:"#64748b",fontWeight:600,padding:"7px 9px",textAlign:"left",fontSize:10,textTransform:"uppercase",whiteSpace:"nowrap"}}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[...adminRecs].reverse().map((r,i)=>(
+                      <tr key={i} style={{borderBottom:"1px solid rgba(255,255,255,0.04)",background:i%2===0?"transparent":"rgba(255,255,255,0.015)"}}>
+                        <td style={{color:"#e2e8f0",padding:"7px 9px",fontSize:12}}>{r.personal?.fullName||"—"}</td>
+                        <td style={{color:"#94a3b8",padding:"7px 9px",fontSize:11}}>{r.personal?.age||"—"}</td>
+                        <td style={{color:"#94a3b8",padding:"7px 9px",fontSize:11,whiteSpace:"nowrap"}}>{r.personal?.city||"—"}</td>
+                        <td style={{padding:"7px 9px"}}>{r.primaryType?<span style={{color:TI[r.primaryType].color,fontWeight:700,fontSize:11}}>{TI[r.primaryType].emoji} T{r.primaryType} {TI[r.primaryType].name}</span>:"—"}</td>
+                        <td style={{color:"#94a3b8",padding:"7px 9px",fontSize:11}}>{r.primaryType?TI[r.primaryType].center:"—"}</td>
+                        <td style={{color:"#94a3b8",padding:"7px 9px",fontSize:11}}>{r.wingType?`T${r.wingType}`:"—"}</td>
+                        <td style={{padding:"7px 9px"}}>{r.dominant?<span style={{color:STI[r.dominant]?.color||AQ,fontWeight:600,fontSize:11}}>{STI[r.dominant]?.emoji} {STI[r.dominant]?.name}</span>:"—"}</td>
+                        <td style={{color:"#94a3b8",padding:"7px 9px",fontSize:11,whiteSpace:"nowrap"}}>{r.timestamp||"—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+          <div style={{height:20}}/>
+        </div>
+      </div>
+    );
+  }
+
+  if(screen==="adminLogin") return (
+    <div style={{minHeight:"100vh",background:`linear-gradient(135deg,${BG},${BG2})`,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Segoe UI',sans-serif"}}>
+      <div style={{background:"rgba(6,182,212,0.06)",borderRadius:18,padding:"2rem",maxWidth:340,width:"90%",textAlign:"center",border:"1px solid rgba(6,182,212,0.2)"}}>
+        <div style={{fontSize:48,marginBottom:"1rem"}}>🔐</div>
+        <h3 style={{color:"white",margin:"0 0 0.25rem"}}>Panel Administrativo</h3>
+        <p style={{color:"#64748b",fontSize:12,marginBottom:"1.25rem"}}>Solo para José Pioquinto</p>
+        <input type="password" value={adminPass} onChange={e=>setAdminPass(e.target.value)} onKeyDown={e=>e.key==="Enter"&&loadAdmin()} placeholder="Contraseña" style={{width:"100%",padding:"11px 13px",borderRadius:10,border:"1px solid rgba(6,182,212,0.3)",background:"rgba(255,255,255,0.07)",color:"white",fontSize:14,outline:"none",boxSizing:"border-box",marginBottom:"0.75rem"}}/>
+        {adminErr&&<p style={{color:"#F43F5E",fontSize:12,margin:"0 0 0.75rem"}}>{adminErr}</p>}
+        <button onClick={loadAdmin} style={{width:"100%",padding:"13px",borderRadius:10,background:`linear-gradient(135deg,${AQ},#0EA5E9)`,color:"white",fontWeight:700,border:"none",cursor:"pointer",fontSize:14,marginBottom:"0.75rem"}}>Ingresar</button>
+        <button onClick={()=>setScreen("welcome")} style={{background:"none",border:"none",color:"#475569",cursor:"pointer",fontSize:13,display:"block",width:"100%"}}>← Volver</button>
+      </div>
+    </div>
+  );
+
+  if(screen==="welcome") return (
+    <div style={{minHeight:"100vh",background:`linear-gradient(160deg,${BG},${BG2},#0E2A40)`,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"2rem",fontFamily:"'Segoe UI',sans-serif"}}>
+      <div style={{maxWidth:500,width:"100%",textAlign:"center"}}>
+        <div style={{width:84,height:84,borderRadius:"50%",background:`linear-gradient(135deg,${AQ},${PK})`,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 1rem",fontSize:38,boxShadow:`0 0 40px rgba(6,182,212,0.3)`}}>🧭</div>
+        <p style={{color:AQ,fontSize:11,letterSpacing:4,textTransform:"uppercase",margin:"0 0 0.5rem",fontWeight:600}}>José Pioquinto · Coach</p>
+        <h1 style={{color:"white",fontSize:"2rem",fontWeight:800,margin:"0 0 0.75rem",lineHeight:1.15}}>Descubre tu <span style={{color:AQ}}>Eneagrama</span></h1>
+        <p style={{color:"#94a3b8",marginBottom:"1.5rem",lineHeight:1.7,fontSize:13.5}}>57 preguntas que revelan tu tipo, subtipo instintivo y camino de transformación.</p>
+        <div style={{background:"rgba(255,255,255,0.04)",borderRadius:16,padding:"1.25rem",textAlign:"left",border:"1px solid rgba(6,182,212,0.15)",marginBottom:"1.25rem"}}>
+          <label style={{color:AQ,fontSize:10,letterSpacing:3,textTransform:"uppercase",display:"block",marginBottom:7,fontWeight:600}}>¿Qué esperas de este proceso? (opcional)</label>
+          <textarea value={intention} onChange={e=>setIntention(e.target.value)} placeholder="Ej: Conocerme mejor, mejorar mis relaciones, encontrar mi propósito..." rows={3} style={{width:"100%",padding:"11px 13px",borderRadius:10,border:"1px solid rgba(6,182,212,0.2)",background:"rgba(255,255,255,0.06)",color:"white",fontSize:13,outline:"none",resize:"none",boxSizing:"border-box"}}/>
+        </div>
+        <button onClick={()=>setScreen("consent")} style={{width:"100%",padding:"15px",borderRadius:13,background:`linear-gradient(135deg,${AQ},#0EA5E9)`,color:"white",fontSize:15,fontWeight:700,border:"none",cursor:"pointer",boxShadow:`0 4px 20px rgba(6,182,212,0.25)`}}>Comenzar mi viaje de autoconocimiento →</button>
+        <div style={{display:"flex",justifyContent:"center",gap:"1.5rem",marginTop:"1rem"}}>
+          {["⏱ ~20 min","🔒 Ley 1581","🤖 Con IA"].map(s=><span key={s} style={{color:"#334155",fontSize:11}}>{s}</span>)}
+        </div>
+        <button onClick={()=>setScreen("adminLogin")} style={{background:"none",border:"none",color:"#1e293b",cursor:"pointer",fontSize:9,marginTop:"2rem",letterSpacing:2,textTransform:"uppercase"}}>● panel admin</button>
+      </div>
+    </div>
+  );
+
+  if(screen==="consent") return (
+    <div style={{minHeight:"100vh",background:`linear-gradient(135deg,${BG},${BG2})`,display:"flex",alignItems:"center",justifyContent:"center",padding:"2rem",fontFamily:"'Segoe UI',sans-serif"}}>
+      <div style={{maxWidth:540,width:"100%"}}>
+        <div style={{textAlign:"center",marginBottom:"1.5rem"}}>
+          <div style={{fontSize:44,marginBottom:"0.5rem"}}>🔒</div>
+          <h2 style={{color:"white",margin:0}}>Autorización de Datos Personales</h2>
+          <p style={{color:"#64748b",fontSize:12,margin:"0.25rem 0 0"}}>Ley 1581 de 2012 · Colombia</p>
+        </div>
+        <div style={{background:"rgba(255,255,255,0.04)",borderRadius:14,padding:"1.25rem",border:"1px solid rgba(6,182,212,0.12)",maxHeight:240,overflowY:"auto",marginBottom:"1.25rem"}}>
+          <p style={{color:"#cbd5e1",fontSize:12.5,lineHeight:1.85,margin:0}}>De conformidad con la <strong style={{color:AQ}}>Ley 1581 de 2012</strong>, autorizo a <strong style={{color:AQ}}>José Lubin Pioquinto Díaz</strong> para recolectar y tratar mis datos personales con finalidades de coaching, análisis Eneagrama, estadísticas y seguimiento. Los datos son confidenciales y no serán compartidos sin mi consentimiento.</p>
+          <p style={{color:"#475569",fontSize:11.5,marginTop:"0.75rem"}}>Contacto: <span style={{color:AQ}}>jose@josepioquinto.com</span></p>
+        </div>
+        <label style={{display:"flex",alignItems:"flex-start",gap:"0.75rem",cursor:"pointer",marginBottom:"1.25rem",padding:"0.75rem",background:"rgba(255,255,255,0.03)",borderRadius:10,border:`1px solid ${consent?"rgba(6,182,212,0.3)":"rgba(255,255,255,0.06)"}`}}>
+          <input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)} style={{width:18,height:18,marginTop:2,accentColor:AQ,flexShrink:0,cursor:"pointer"}}/>
+          <span style={{color:"#cbd5e1",fontSize:13,lineHeight:1.6}}>He leído y entiendo la política. <strong style={{color:AQ}}>Autorizo voluntariamente</strong> el uso de mis datos.</span>
+        </label>
+        <button onClick={()=>consent&&setScreen("intake")} disabled={!consent} style={{width:"100%",padding:"14px",borderRadius:12,background:consent?`linear-gradient(135deg,${AQ},#0EA5E9)`:"#1e293b",color:consent?"white":"#475569",fontWeight:700,fontSize:15,border:"none",cursor:consent?"pointer":"not-allowed",marginBottom:"0.75rem"}}>Acepto y continúo →</button>
+        <button onClick={()=>setScreen("welcome")} style={{background:"none",border:"none",color:"#475569",cursor:"pointer",fontSize:13,display:"block",margin:"0 auto"}}>← Volver</button>
+      </div>
+    </div>
+  );
+
+  if(screen==="intake") return (
+    <div style={{minHeight:"100vh",background:"#f0f9ff",fontFamily:"'Segoe UI',sans-serif"}}>
+      <div style={{background:`linear-gradient(135deg,${BG},${BG2})`,padding:"1.1rem 1.5rem",textAlign:"center",position:"sticky",top:0,zIndex:10}}>
+        <p style={{color:AQ,fontSize:10,letterSpacing:3,textTransform:"uppercase",margin:"0 0 0.1rem",fontWeight:600}}>Paso 1 de 3</p>
+        <h2 style={{color:"white",margin:0,fontSize:17}}>🧭 Datos del coachee</h2>
+      </div>
+      <div style={{maxWidth:560,margin:"0 auto",padding:"1.5rem"}}>
+        <p style={{color:"#64748b",fontSize:12.5,textAlign:"center",marginBottom:"1.5rem"}}>Campos con <span style={{color:"#e74c3c",fontWeight:700}}>*</span> son obligatorios.</p>
+        {FIELDS.map(f=>(
+          <div key={f.id} style={{marginBottom:"0.85rem"}}>
+            <label style={{display:"block",color:"#374151",fontSize:12,fontWeight:600,marginBottom:5}}>{f.label} {f.req&&<span style={{color:"#e74c3c"}}>*</span>}</label>
+            {f.type==="select"?(
+              <select value={intake[f.id]||""} onChange={e=>setField(f.id,e.target.value)} style={{width:"100%",padding:"11px 13px",borderRadius:10,border:`1.5px solid ${intake[f.id]?AQ:"#e2e8f0"}`,background:"white",fontSize:14,outline:"none",boxSizing:"border-box",color:intake[f.id]?"#1e293b":"#94a3b8"}}>
+                <option value="">Selecciona...</option>
+                {f.opts.map(o=><option key={o} value={o}>{o}</option>)}
+              </select>
+            ):(
+              <input type={f.type} value={intake[f.id]||""} onChange={e=>setField(f.id,e.target.value)} placeholder={f.ph} style={{width:"100%",padding:"11px 13px",borderRadius:10,border:`1.5px solid ${intake[f.id]?AQ:"#e2e8f0"}`,background:"white",fontSize:14,outline:"none",boxSizing:"border-box"}}/>
+            )}
+          </div>
+        ))}
+        <button onClick={()=>intakeOk&&setScreen("quiz")} disabled={!intakeOk} style={{width:"100%",padding:"15px",borderRadius:13,background:intakeOk?`linear-gradient(135deg,${AQ},#0EA5E9)`:"#e2e8f0",color:intakeOk?"white":"#94a3b8",fontWeight:700,fontSize:15,border:"none",cursor:intakeOk?"pointer":"not-allowed",marginTop:"0.75rem"}}>Continuar al cuestionario →</button>
+        {!intakeOk&&<p style={{color:"#94a3b8",fontSize:12,textAlign:"center",marginTop:"0.5rem"}}>Completa los campos obligatorios (*) para continuar</p>}
+        <div style={{height:20}}/>
+      </div>
+    </div>
+  );
+
+  if(screen==="quiz") return (
+    <div style={{minHeight:"100vh",background:"#f0f9ff",fontFamily:"'Segoe UI',sans-serif"}}>
+      <div style={{background:`linear-gradient(135deg,${BG},${BG2})`,padding:"1rem 1.5rem",position:"sticky",top:0,zIndex:10}}>
+        <div style={{maxWidth:640,margin:"0 auto"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:7}}>
+            <span style={{color:AQ,fontSize:12,fontWeight:700}}>🧭 Paso 2 de 3 · Cuestionario</span>
+            <span style={{color:"#94a3b8",fontSize:12}}>{ta}/45</span>
+          </div>
+          <div style={{background:"rgba(255,255,255,0.1)",borderRadius:4,height:7}}>
+            <div style={{height:"100%",background:`linear-gradient(90deg,${AQ},${PK})`,borderRadius:4,width:`${prog}%`,transition:"width 0.5s"}}/>
+          </div>
+          <div style={{display:"flex",justifyContent:"space-between",marginTop:4}}>
+            <span style={{color:"#475569",fontSize:11}}>Bloque {bi+1} de {tb}</span>
+            <span style={{color:AQ,fontSize:11,fontWeight:600}}>{prog}%</span>
+          </div>
+        </div>
+      </div>
+      <div style={{maxWidth:640,margin:"0 auto",padding:"1.5rem"}}>
+        <div style={{background:"#e0f2fe",borderRadius:10,padding:"9px 14px",marginBottom:"1.25rem",textAlign:"center",border:"1px solid rgba(6,182,212,0.2)"}}>
+          <p style={{color:"#0369a1",fontSize:12,margin:0}}>¿Qué tan parecida es cada afirmación a ti? <strong>1 = Nada · 5 = Muy parecido</strong></p>
+        </div>
+        {cb.map((q,idx)=>(
+          <div key={q.id} style={{background:"white",borderRadius:14,padding:"1.25rem",marginBottom:"0.85rem",border:`2px solid ${ans[q.id]?AQ:"transparent"}`,transition:"all 0.2s",boxShadow:ans[q.id]?`0 4px 14px rgba(6,182,212,0.1)`:"0 2px 6px rgba(0,0,0,0.06)"}}>
+            <p style={{color:"#1e293b",fontSize:14,fontWeight:500,margin:"0 0 1rem",lineHeight:1.65}}>
+              <span style={{color:AQ,fontWeight:800}}>{bi*BS+idx+1}. </span>{q.text}
+            </p>
+            <ScaleButtons qid={q.id} val={ans[q.id]} onChange={setAnsQ} color={AQ}/>
+          </div>
+        ))}
+        <button onClick={nextBatch} disabled={!aca} style={{width:"100%",padding:"15px",borderRadius:13,background:aca?`linear-gradient(135deg,${BG},${BG2})`:"#e2e8f0",color:aca?"white":"#94a3b8",fontWeight:700,fontSize:15,border:"none",cursor:aca?"pointer":"not-allowed",marginTop:"0.5rem"}}>
+          {bi===tb-1?"Continuar al Subtipo →":`Siguiente bloque (${bi+2}/${tb}) →`}
+        </button>
+        {!aca&&<p style={{color:"#94a3b8",fontSize:12,textAlign:"center",marginTop:"0.5rem"}}>Responde todas las preguntas para continuar</p>}
+      </div>
+    </div>
+  );
+
+  if(screen==="subtype"){
+    const subGroups=[{sub:"SP",title:"🏠 Autoconservación",color:AQ},{sub:"SO",title:"👥 Social",color:PK},{sub:"SX",title:"⚡ Íntimo",color:"#A855F7"}];
+    return (
+      <div style={{minHeight:"100vh",background:"#f0f9ff",fontFamily:"'Segoe UI',sans-serif"}}>
+        <div style={{background:`linear-gradient(135deg,${BG},${BG2})`,padding:"1.1rem 1.5rem",textAlign:"center",position:"sticky",top:0,zIndex:10}}>
+          <p style={{color:AQ,fontSize:10,letterSpacing:3,textTransform:"uppercase",margin:"0 0 0.1rem",fontWeight:600}}>Paso 3 de 3 · Instinto Dominante</p>
+          <h2 style={{color:"white",margin:0,fontSize:17}}>🎭 ¿Cómo usas tu energía?</h2>
+        </div>
+        <div style={{maxWidth:640,margin:"0 auto",padding:"1.5rem"}}>
+          <div style={{background:`linear-gradient(135deg,${BG},${BG2})`,borderRadius:14,padding:"1rem 1.25rem",marginBottom:"1.5rem",border:"1px solid rgba(6,182,212,0.15)"}}>
+            <p style={{color:"#94a3b8",fontSize:13,margin:0,lineHeight:1.7}}><strong style={{color:"white"}}>12 preguntas finales</strong> que revelan hacia dónde orienta tu energía: seguridad propia, vida social o conexiones íntimas.</p>
+          </div>
+          {subGroups.map(({sub,title,color},si)=>(
+            <div key={sub} style={{marginBottom:"1.5rem"}}>
+              <div style={{display:"flex",alignItems:"center",gap:"0.5rem",marginBottom:"0.75rem"}}>
+                <div style={{height:3,flex:1,background:`linear-gradient(90deg,${color},transparent)`,borderRadius:2}}/>
+                <span style={{color,fontWeight:700,fontSize:13}}>{title}</span>
+                <div style={{height:3,flex:1,background:`linear-gradient(270deg,${color},transparent)`,borderRadius:2}}/>
+              </div>
+              {SQ.filter(q=>q.sub===sub).map((q,idx)=>(
+                <div key={q.id} style={{background:"white",borderRadius:14,padding:"1.1rem",marginBottom:"0.75rem",border:`2px solid ${stAns[q.id]?color:"transparent"}`,transition:"all 0.2s",boxShadow:stAns[q.id]?`0 4px 12px ${color}1A`:"0 2px 6px rgba(0,0,0,0.06)"}}>
+                  <p style={{color:"#1e293b",fontSize:13.5,fontWeight:500,margin:"0 0 0.85rem",lineHeight:1.6}}>
+                    <span style={{color,fontWeight:800}}>{si*4+idx+1}. </span>{q.text}
+                  </p>
+                  <ScaleButtons qid={q.id} val={stAns[q.id]} onChange={setAnsST} color={color}/>
+                </div>
+              ))}
+            </div>
+          ))}
+          <button onClick={finish} disabled={!stDone} style={{width:"100%",padding:"15px",borderRadius:13,background:stDone?`linear-gradient(135deg,${AQ},#0EA5E9)`:"#e2e8f0",color:stDone?"white":"#94a3b8",fontWeight:700,fontSize:15,border:"none",cursor:stDone?"pointer":"not-allowed"}}>🧭 Ver mi perfil completo</button>
+          {!stDone&&<p style={{color:"#94a3b8",fontSize:12,textAlign:"center",marginTop:"0.5rem"}}>Responde las 12 preguntas para continuar</p>}
+          <div style={{height:20}}/>
+        </div>
+      </div>
+    );
+  }
+
+  if(screen==="loading") return (
+    <div style={{minHeight:"100vh",background:`linear-gradient(135deg,${BG},${BG2})`,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",fontFamily:"'Segoe UI',sans-serif",textAlign:"center",padding:"2rem"}}>
+      <div style={{fontSize:70,marginBottom:"1.5rem"}}>🧭</div>
+      <h2 style={{color:"white",fontSize:"1.4rem",fontWeight:700,margin:"0 0 0.5rem"}}>{fname}, construyendo tu perfil...</h2>
+      <p style={{color:AQ,fontSize:14,margin:"0 0 2.5rem"}}>{lmsg}</p>
+      <div style={{width:220,height:5,background:"rgba(255,255,255,0.1)",borderRadius:3,overflow:"hidden"}}>
+        <div style={{height:"100%",background:`linear-gradient(90deg,${AQ},${PK})`,borderRadius:3,animationName:"bar",animationDuration:"2.5s",animationTimingFunction:"ease-in-out",animationIterationCount:"infinite"}}/>
+      </div>
+    </div>
+  );
+
+  if(screen==="result"&&result){
+    const {primaryType:pt,wingType:wt,scores:sc,stScores,dominant}=result;
+    const ti=TI[pt],wi=TI[wt];
+    const ss=Object.entries(sc).sort((a,b)=>b[1]-a[1]);
+    const top3=ss.slice(0,3).map(([t,v])=>({t:parseInt(t),v,...TI[parseInt(t)]}));
+    const ctrSc={};Object.entries(CTR).forEach(([k,v])=>{ctrSc[k]=v.types.reduce((s,t)=>s+(sc[t]||0),0);});
+    const ctrTotal=Math.max(Object.values(ctrSc).reduce((a,b)=>a+b,0),1);
+    const myCenter=Object.entries(CTR).find(([,v])=>v.types.includes(pt))?.[0]||"";
+    const stTotal=Math.max(stScores.SP+stScores.SO+stScores.SX,1);
+    const stPcts={SP:Math.round(stScores.SP/stTotal*100),SO:Math.round(stScores.SO/stTotal*100),SX:100-Math.round(stScores.SP/stTotal*100)-Math.round(stScores.SO/stTotal*100)};
+    const stSorted=Object.entries(stScores).sort((a,b)=>b[1]-a[1]);
+    const secondary=stSorted[1][0],repressed=stSorted[2][0];
+    const stPieData=["SP","SO","SX"].map(k=>({name:STI[k].name,value:stPcts[k],color:STI[k].color,key:k}));
+    return (
+      <div style={{minHeight:"100vh",background:"#f0f9ff",fontFamily:"'Segoe UI',sans-serif"}}>
+        <div style={{background:`linear-gradient(160deg,${BG} 0%,#0C2235 40%,${ti.color}12 70%,${BG} 100%)`,padding:"2.5rem 1.5rem 2rem",textAlign:"center",position:"relative",overflow:"hidden"}}>
+          <p style={{color:AQ,fontSize:10,letterSpacing:4,textTransform:"uppercase",margin:"0 0 1rem",fontWeight:600,position:"relative"}}>Tu Perfil · José Pioquinto Coach</p>
+          <div style={{fontSize:72,marginBottom:"0.75rem",position:"relative"}}>{ti.emoji}</div>
+          <div style={{color:"#64748b",fontSize:12,marginBottom:3,position:"relative"}}>Eneagrama Tipo {pt} · {fname}</div>
+          <h1 style={{color:"white",fontSize:"2rem",fontWeight:900,margin:"0 0 0.35rem",position:"relative"}}>{ti.name}</h1>
+          <p style={{color:PK,fontSize:13,margin:"0 0 0.4rem",position:"relative",fontWeight:600}}>con ala {wt} · {wi.name}</p>
+          <p style={{color:STI[dominant].color,fontSize:12,margin:"0 0 1.25rem",position:"relative",fontWeight:600}}>{STI[dominant].emoji} Subtipo {STI[dominant].name}</p>
+          <div style={{display:"flex",justifyContent:"center",gap:"0.6rem",flexWrap:"wrap",position:"relative"}}>
+            {[{l:"Centro",v:ti.center},{l:"Virtud",v:VIRTUES[pt]},{l:"Pasión",v:PASSIONS[pt]}].map(b=>(
+              <div key={b.l} style={{background:"rgba(255,255,255,0.07)",borderRadius:10,padding:"9px 14px",border:"1px solid rgba(6,182,212,0.15)"}}>
+                <div style={{color:"#64748b",fontSize:9,textTransform:"uppercase",letterSpacing:1.5}}>{b.l}</div>
+                <div style={{color:"white",fontWeight:700,fontSize:14,marginTop:2}}>{b.v}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div style={{maxWidth:680,margin:"0 auto",padding:"1.5rem"}}>
+          <div style={{background:BG2,borderRadius:18,padding:"1.5rem",marginBottom:"1.25rem",border:"1px solid rgba(6,182,212,0.15)"}}>
+            <h3 style={{color:"white",margin:"0 0 0.25rem",fontSize:15,fontWeight:700}}>🕸️ Tu Mapa de Eneagrama</h3>
+            <p style={{color:"#64748b",fontSize:11,margin:"0 0 1rem"}}>Los 9 tipos · Máx 25 puntos c/u</p>
+            <RadarSVG sc={sc}/>
+          </div>
+          <div style={{background:"white",borderRadius:18,padding:"1.5rem",marginBottom:"1.25rem",boxShadow:"0 2px 10px rgba(0,0,0,0.06)",border:`2px solid ${STI[dominant].color}33`}}>
+            <h3 style={{color:"#1e293b",margin:"0 0 1rem",fontSize:15,fontWeight:700}}>🎭 Tu Subtipo Instintivo</h3>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"1.5rem",alignItems:"center"}}>
+              <DonutSVG data={stPieData} dominant={dominant}/>
+              <div>
+                {[{rank:"🥇 Dominante",key:dominant},{rank:"🥈 Secundario",key:secondary},{rank:"💤 Reprimido",key:repressed}].map(({rank,key})=>(
+                  <div key={key} style={{marginBottom:"0.85rem"}}>
+                    <div style={{fontSize:10,color:"#94a3b8",marginBottom:3,textTransform:"uppercase",letterSpacing:0.5}}>{rank}</div>
+                    <div style={{display:"inline-flex",alignItems:"center",gap:6,background:key===dominant?`${STI[key].color}15`:"#f8fafc",borderRadius:8,padding:"5px 10px",border:key===dominant?`1px solid ${STI[key].color}40`:"none"}}>
+                      <span style={{fontSize:16}}>{STI[key].emoji}</span>
+                      <span style={{color:key===dominant?STI[key].color:"#64748b",fontWeight:key===dominant?700:500,fontSize:13}}>{STI[key].name} · {stPcts[key]}%</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div style={{background:`${STI[dominant].color}0C`,borderRadius:10,padding:"0.75rem 1rem",marginTop:"1rem",borderLeft:`3px solid ${STI[dominant].color}`}}>
+              <p style={{color:"#374151",fontSize:13,margin:0,lineHeight:1.7}}>{STI[dominant].desc}</p>
+            </div>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"0.75rem",marginBottom:"1.25rem"}}>
+            {Object.entries(CTR).map(([name,info])=>{
+              const cs=ctrSc[name]||0,pct=Math.round((cs/ctrTotal)*100),isMain=name===myCenter;
+              return (
+                <div key={name} style={{background:isMain?BG2+"cc":BG2,borderRadius:14,padding:"1.1rem",textAlign:"center",border:isMain?`2px solid ${info.color}`:"1px solid rgba(255,255,255,0.05)",position:"relative",overflow:"hidden"}}>
+                  {isMain&&<div style={{position:"absolute",top:0,left:0,right:0,height:3,background:info.color}}/>}
+                  <div style={{fontSize:28,marginBottom:4}}>{info.emoji}</div>
+                  <div style={{color:isMain?info.color:"#64748b",fontWeight:800,fontSize:22,marginBottom:2}}>{pct}%</div>
+                  <div style={{color:"white",fontWeight:700,fontSize:12,marginBottom:3}}>{name}</div>
+                  <div style={{color:"#475569",fontSize:10,marginBottom:7}}>{info.desc}</div>
+                  <div style={{background:"rgba(0,0,0,0.3)",borderRadius:4,height:5}}>
+                    <div style={{height:"100%",background:info.color,borderRadius:4,width:`${pct}%`,transition:"width 1.5s"}}/>
+                  </div>
+                  {isMain&&<div style={{marginTop:6,background:`${info.color}22`,borderRadius:6,padding:"2px 8px",display:"inline-block"}}><span style={{color:info.color,fontSize:9,fontWeight:700}}>TU CENTRO</span></div>}
+                </div>
+              );
+            })}
+          </div>
+          <div style={{background:"white",borderRadius:16,padding:"1.5rem",marginBottom:"1.25rem",boxShadow:"0 2px 10px rgba(0,0,0,0.06)"}}>
+            <h3 style={{color:"#1e293b",margin:"0 0 1rem",fontSize:15,fontWeight:700}}>🏅 Top 3 Eneatipos</h3>
+            {top3.map((t,i)=>(
+              <div key={t.t} style={{display:"flex",alignItems:"center",gap:"0.75rem",padding:"0.75rem",borderRadius:10,background:i===0?"#ecfeff":"#f8fafc",marginBottom:8,border:i===0?`1px solid ${AQ}33`:"1px solid #f1f5f9"}}>
+                <div style={{width:34,height:34,borderRadius:"50%",background:i===0?`linear-gradient(135deg,${AQ},#0EA5E9)`:i===1?`${PK}22`:"#f1f5f9",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>{t.emoji}</div>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:13,fontWeight:i===0?700:500,color:i===0?"#1e293b":"#64748b"}}>{["🥇","🥈","🥉"][i]} T{t.t} · {t.name}</div>
+                  <div style={{background:"#f1f5f9",borderRadius:4,height:5,marginTop:4}}>
+                    <div style={{height:"100%",background:t.color,borderRadius:4,width:`${(t.v/25)*100}%`}}/>
+                  </div>
+                </div>
+                <span style={{color:t.color,fontWeight:700,fontSize:14}}>{t.v}/25</span>
+              </div>
+            ))}
+          </div>
+          <div style={{background:"white",borderRadius:16,padding:"1.5rem",marginBottom:"1.25rem",boxShadow:"0 2px 10px rgba(0,0,0,0.06)"}}>
+            <h3 style={{color:"#1e293b",margin:"0 0 1rem",fontSize:15,fontWeight:700}}>📊 Distribución completa</h3>
+            {ss.map(([t,v])=>{const ip=parseInt(t)===pt,ti2=TI[parseInt(t)];return(
+              <div key={t} style={{marginBottom:9}}>
+                <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
+                  <span style={{fontSize:12,color:ip?"#1e293b":"#64748b",fontWeight:ip?700:400}}>{ti2.emoji} T{t} · {ti2.name}</span>
+                  <span style={{fontSize:12,fontWeight:ip?700:400,color:ip?ti2.color:"#94a3b8"}}>{v}/25</span>
+                </div>
+                <div style={{background:"#f1f5f9",borderRadius:4,height:ip?9:5,overflow:"hidden"}}>
+                  <div style={{height:"100%",background:ip?ti2.color:"#cbd5e1",borderRadius:4,width:`${(v/25)*100}%`,transition:"width 1.5s"}}/>
+                </div>
+              </div>
+            );})}
+          </div>
+          <div style={{background:"white",borderRadius:16,padding:"1.5rem",marginBottom:"1.25rem",boxShadow:"0 2px 10px rgba(0,0,0,0.06)"}}>
+            <h3 style={{color:"#1e293b",margin:"0 0 1rem",fontSize:15,fontWeight:700}}>🧠 Tu Análisis Personalizado</h3>
+            <div style={{color:"#374151",lineHeight:1.85,fontSize:14}}>{renderText(analysis)}</div>
+          </div>
+          <div style={{background:`linear-gradient(135deg,${BG},${BG2})`,borderRadius:18,padding:"2rem",textAlign:"center",border:"1px solid rgba(6,182,212,0.15)"}}>
+            <div style={{fontSize:40,marginBottom:"0.75rem"}}>🚀</div>
+            <h3 style={{color:"white",margin:"0 0 0.5rem",fontSize:18,fontWeight:800}}>¿Listo para ir más profundo?</h3>
+            <p style={{color:"#94a3b8",fontSize:13,margin:"0 0 1.5rem",lineHeight:1.7}}>Este perfil es el punto de partida. En una sesión de coaching diseñamos juntos tu camino real de transformación.</p>
+            <div style={{background:`linear-gradient(135deg,${AQ},${PK})`,borderRadius:12,padding:"15px",cursor:"pointer"}}>
+              <p style={{color:"white",fontWeight:800,margin:0,fontSize:15}}>💼 Agenda una sesión con José Pioquinto</p>
+              <p style={{color:"rgba(255,255,255,0.7)",fontSize:11,margin:"4px 0 0"}}>Coach Certificado · Facilitador Lego Serious Play · Speaker · Colombia</p>
+            </div>
+          </div>
+          <div style={{height:24}}/>
+        </div>
+      </div>
+    );
+  }
+  return null;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
