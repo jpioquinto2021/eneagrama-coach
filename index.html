@@ -282,9 +282,7 @@ function App(){
     setAnalysis(atext);
     try{
       const rec={id:Date.now().toString(),timestamp:new Date().toISOString(),personal:intake,intention,primaryType:primary,wingType:wing,stScores,dominant};
-const fd=new FormData();
-fd.append("data",JSON.stringify(rec));
-fetch(APPS_SCRIPT_URL,{method:"POST",mode:"no-cors",body:fd});
+fetch("/.netlify/functions/save",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(rec)});
     }catch(e){}
     clearInterval(iv);setScreen("result");
   }
